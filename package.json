@@ -1,0 +1,26 @@
+{
+  "name": "testing-deepgram",
+  "version": "1.0.0",
+  "description": "Test deep gram real time",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sudotong/testing-deepgram.git"
+  },
+  "author": "Sam Udotong",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sudotong/testing-deepgram/issues"
+  },
+  "homepage": "https://github.com/sudotong/testing-deepgram#readme",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "querystring": "^0.2.0",
+    "stream": "0.0.2",
+    "util": "^0.12.1",
+    "websocket": "^1.0.30"
+  }
+}
