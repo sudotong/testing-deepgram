@@ -33,32 +33,32 @@ RecognizeStream.prototype.initialize = function () {
 
     // when the input stops, let the service know that we're done
     this.on('finish', () => {
-        console.log('[Dg] finish');
+        // console.log('[Dg] finish');
         if (this.socket && this.socket.readyState === W3CWebSocket.OPEN) {
             this.socket.send(closingMessage);
         } else {
             this.once('connect', () => {
-                console.log('[Dg] got connect');
+                // console.log('[Dg] got connect');
                 this.socket.send(closingMessage);
             });
         }
     });
 
     socket.onerror = (error) => {
-        console.log('[Dg] got err');
+        // console.log('[Dg] got err');
         this.listening = false;
         this.emit('error', error);
     };
 
     this.socket.onopen = () => {
-        console.log('[Dg] sent opening data');
+        // console.log('[Dg] sent opening data');
         this.emit('connect');
         this.listening = true;
         this.emit('listening');
     };
 
     this.socket.onclose = (e) => {
-        console.log('[Dg] onclose');
+        // console.log('[Dg] onclose');
         this.listening = false;
         this.push('');
 
@@ -84,7 +84,6 @@ RecognizeStream.prototype.initialize = function () {
     }
 
     socket.onmessage = (frame) => {
-        console.log(frame);
         if (typeof frame.data !== 'string') {
             return emitError('Unexpected binary data received from server', frame);
         }
@@ -98,15 +97,16 @@ RecognizeStream.prototype.initialize = function () {
 
         if (!data) throw new Error('Invalid JSON received from service');
 
-        console.log({ data });
-
         let recognized = false;
         if (data.error) {
             emitError(data.error, frame);
             recognized = true;
         }
 
-        if (data.TRANSCRIPT || data.type === 'connected') {
+        if (data.channel && data.channel.alternatives && data.channel.alternatives.length) {
+            // if (data.channel.alternatives.length > 1) console.log({ alternatives: data.channel.alternatives });
+            data.transcript = data.channel.alternatives[0].transcript;
+            data.confidence = data.channel.alternatives[0].confidence;
             // this is emitted both when the server is ready for audio
             if (!this.listening) {
                 this.listening = true;
@@ -115,17 +115,16 @@ RecognizeStream.prototype.initialize = function () {
             recognized = true;
         }
 
-        if (data.TRANSCRIPT) {
+        if (data.transcript) {
 
             /**
              * Object with interim or final results, including possible alternatives. May have no results at all for empty audio files.
              * @event RecognizeStream#results
              * @param {Object} results
              */
-            this.emit('results', data.TRANSCRIPT);
+            this.emit('results', data.transcript);
             // note: currently there is always either no entries or exactly 1 entry in the results array. However, this may change in the future.
-            if (data.IS_FINAL) {
-
+            if (data.is_final) {
                 /**
                  * Finalized text
                  * @event RecognizeStream#data
@@ -133,7 +132,7 @@ RecognizeStream.prototype.initialize = function () {
                  */
 
                 // [{type, value, ts, end_ts, confidence}]
-                this.emit('data', [{ value: data.TRANSCRIPT, confidence: data.CONFIDENCE, channel: data.CHANNEL }]);
+                this.emit('data', [{ value: data.transcript, confidence: data.confidence, channel: data.channel_index[0], ts: data.start, end_ts: data.start + data.duration }]);
             }
             recognized = true;
         }
@@ -161,7 +160,7 @@ RecognizeStream.prototype._write = function (chunk, encoding, callback) {
             this.initialize();
         }
         this.once('listening', () => {
-            console.log('[Dg] listening')
+            // console.log('[Dg] listening')
             this.socket.send(chunk);
             this.afterSend(callback);
         });
@@ -181,7 +180,7 @@ RecognizeStream.prototype.afterSend = function (next) {
 };
 
 RecognizeStream.prototype.stop = function () {
-    console.log('[Dg] stop');
+    // console.log('[Dg] stop');
     this.emit('stopping');
     if (this.listening) {
         this.socket.send('');

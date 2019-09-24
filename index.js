@@ -44,13 +44,13 @@ const filename = './discovery-1min.wav'
 // Stream an audio file from disk to the Speech API, e.g. "./resources/audio.wav"
 fs.createReadStream(filename).pipe(stream);
 
-const secs = 20;
+const secs = 30;
 console.log(`Automatically ending stream in ${secs} sec`);
 setTimeout(() => {
     console.log('Ending stream!')
     stream.stop();
-    console.log('Waiting 10 more secs for stream to print final message(s)');
+    console.log('Waiting ' + secs / 2 + ' more secs for stream to print final message(s)');
     setTimeout(() => {
         console.log('Script is over');
-    }, 10000);
+    }, secs * 500);
 }, secs * 1000);
